@@ -24,7 +24,7 @@ BLUE_SPACESHIP = pygame.image.load(os.path.join('assets', 'pixel_ship_blue_small
 GREEN_SPACESHIP = pygame.image.load(os.path.join('assets', 'pixel_ship_green_small.png'))
 RED_SPACESHIP = pygame.image.load(os.path.join('assets', 'pixel_ship_green_small.png'))
 # Player ship
-YELLOW_SPACESHIP = pygame.image.load(os.path.join('assets', 'pixel_ship_yellow.pnG'))
+YELLOW_SPACESHIP = pygame.image.load(os.path.join('assets', 'pixel_ship_yellow.png'))
 
 
 class Ship:
@@ -145,7 +145,8 @@ class Player(Ship):
                         # if object.health <= 0:
                         #   objects.remove(object)
                         objects.remove(object)
-                        self.lasers.remove(laser)
+                        if laser in self.lasers:
+                            self.lasers.remove(laser)
 
     def health_bar(self, screen):
         """
@@ -321,7 +322,7 @@ def main(player_velocity=None):
             wave_amount += 5
             for i in range(wave_amount):
                 # Spawn random color enemies
-                i = Enemy(random.randrange(25, WIDTH - 25), random.randrange(-1500, -100),
+                i = Enemy(random.randrange(25, WIDTH - 40), random.randrange(-1500, -100),
                           random.choice(['red', 'blue', 'green']))
                 i.draw(SCREEN)
                 enemies.append(i)
@@ -329,7 +330,7 @@ def main(player_velocity=None):
         # Check for game events
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                running = False
+                quit()
         # Determine which keys are being pressed
         keys = pygame.key.get_pressed()
         # Allow player to move any direction as long as ship does not go off screen
@@ -367,8 +368,8 @@ def main_menu():
     Shows main menu upon starting game and after losing
     """
     menu_font = pygame.font.SysFont('comicsans', 60)
-    run = True
-    while run:
+    running = True
+    while running:
         SCREEN.blit(BACKGROUND, (0,0))
         menu_text = menu_font.render("Press Any Key to Begin", 1, (255, 255, 255))
         SCREEN.blit(menu_text, (WIDTH / 2 - menu_text.get_width() / 2, HEIGHT / 2 - menu_text.get_height() / 2))
