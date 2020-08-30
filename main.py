@@ -26,6 +26,9 @@ RED_SPACESHIP = pygame.image.load(os.path.join('assets', 'pixel_ship_green_small
 # Player ship
 YELLOW_SPACESHIP = pygame.image.load(os.path.join('assets', 'pixel_ship_yellow.png'))
 
+# Hazards
+FREEZE_HAZARD = pygame.image.load(os.path.join('assets', 'snowflake.png'))
+
 
 class Ship:
     """
@@ -141,9 +144,6 @@ class Player(Ship):
             else:
                 for object in objects:
                     if laser.collision(object):
-                        # object.health -= 10
-                        # if object.health <= 0:
-                        #   objects.remove(object)
                         objects.remove(object)
                         if laser in self.lasers:
                             self.lasers.remove(laser)
@@ -152,8 +152,12 @@ class Player(Ship):
         """
         Shows player's health bar on screen
         """
-        pygame.draw.rect(screen, (255, 0, 0), (self.x, self.y + self.ship_img.get_height() + 10, self.ship_img.get_width(), 10))
-        pygame.draw.rect(screen, (0, 255, 0), (self.x, self.y + self.ship_img.get_height() + 10, self.ship_img.get_width() * (self.health/self.max_health), 10))
+        pygame.draw.rect(screen, (255, 0, 0),
+                         (self.x, self.y + self.ship_img.get_height() + 10, self.ship_img.get_width(), 10))
+        pygame.draw.rect(screen, (0, 255, 0), (
+            self.x, self.y + self.ship_img.get_height() + 10,
+            self.ship_img.get_width() * (self.health / self.max_health),
+            10))
 
 
 class Enemy(Ship):
@@ -161,9 +165,8 @@ class Enemy(Ship):
     Represents enemy ships
     """
 
-    # Create hash map to determine which color enemy ship to use
-
     def __init__(self, x, y, color, health=100):
+        # Create hash table to determine which color enemy ship to use
         color_table = {
             'blue': (BLUE_SPACESHIP, BLUE_LASER),
             'green': (GREEN_SPACESHIP, GREEN_LASER),
@@ -216,7 +219,8 @@ class Laser:
         :param height: integer representing height of screen in pixels
         :return: boolean of True if laser is off screen and False otherwise
         """
-        return not (self.y <= height and self.y >= 0)
+        # return not (self.y <= height and self.y >= 0)
+        return self.y > height or self.y < 0
 
     def collision(self, object):
         """
@@ -226,6 +230,37 @@ class Laser:
         :return:
         """
         return collide(self, object)
+
+
+class Hazards:
+    """
+    Class for hazards that can occur in game
+    """
+
+    def __init__(self, x, y, type):
+        self.x = x
+        self.y = y
+        self.image = FREEZE_HAZARD
+        self.mask = pygame.mask.from_surface(self.image)
+
+    def draw(self, screen):
+        screen.blit(self.image, (self.x, self.y))
+
+    def move(self, velocity):
+        """
+        Allows hazard to downwards at given velocity
+        :param velocity: float representing speed of hazard
+        """
+        self.y += velocity
+
+    # def is_off_screen(self, height):
+    #     """
+    #     Tells us if the hazard is off the screen
+    #     :param height: integer representing height of screen in pixels
+    #     :return: boolean of True if hazard is off screen and False otherwise
+    #     """
+    #     return self.y > height or self.y < 0
+
 
 
 def collide(object1, object2):
@@ -250,7 +285,7 @@ def main(player_velocity=None):
     player = Player(275, 490)
 
     # Set velocities for player, enemies, and lasers
-    player_velocity = 5
+    player_velocity = 8
 
     # Set level and lives
     level = 0
@@ -270,6 +305,12 @@ def main(player_velocity=None):
     game_over = False
     game_over_count = 0
 
+    # Create hazards hash table
+    hazards = {}
+    frozen = False
+    freeze = Hazards(300, 10, 'freeze')
+    hazard_velocity = 2
+
     def redisplay_window():
         """
         Displays background, player ship, enemies, and lasers on screen
@@ -283,6 +324,9 @@ def main(player_velocity=None):
         SCREEN.blit(lives_text, (10, 10))
         SCREEN.blit(level_text, (WIDTH - level_text.get_width() - 10, 10))
 
+        # Draw hazards to screen
+        freeze.draw(SCREEN)
+
         # Draw enemies to screen
         for enemy in enemies:
             enemy.draw(SCREEN)
@@ -293,7 +337,8 @@ def main(player_velocity=None):
         # Display Game Over text
         if game_over:
             game_over_text = game_over_font.render('GAME OVER', 1, (255, 255, 255))
-            SCREEN.blit(game_over_text, (WIDTH / 2 - game_over_text.get_width() / 2, HEIGHT / 2 - game_over_text.get_height() / 2))
+            SCREEN.blit(game_over_text,
+                        (WIDTH / 2 - game_over_text.get_width() / 2, HEIGHT / 2 - game_over_text.get_height() / 2))
 
         pygame.display.update()
 
@@ -336,6 +381,7 @@ def main(player_velocity=None):
         # Allow player to move any direction as long as ship does not go off screen
         if keys[pygame.K_LEFT] and (player.x - player_velocity > 0):
             player.x -= player_velocity
+
             # ship.x += 5  use so ship can't move left
         if keys[pygame.K_RIGHT] and (player.x + player_velocity < WIDTH - player.get_width()):
             player.x += player_velocity
@@ -363,6 +409,9 @@ def main(player_velocity=None):
                 lives -= 1
                 enemies.remove(enemy)
 
+        freeze.move(hazard_velocity)
+
+
 def main_menu():
     """
     Shows main menu upon starting game and after losing
@@ -370,7 +419,7 @@ def main_menu():
     menu_font = pygame.font.SysFont('comicsans', 60)
     running = True
     while running:
-        SCREEN.blit(BACKGROUND, (0,0))
+        SCREEN.blit(BACKGROUND, (0, 0))
         menu_text = menu_font.render("Press Any Key to Begin", 1, (255, 255, 255))
         SCREEN.blit(menu_text, (WIDTH / 2 - menu_text.get_width() / 2, HEIGHT / 2 - menu_text.get_height() / 2))
         pygame.display.update()
@@ -379,5 +428,6 @@ def main_menu():
                 running = False
             if event.type == pygame.KEYDOWN:
                 main()
+
 
 main_menu()
