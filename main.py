@@ -376,7 +376,7 @@ def main_menu():
         pygame.display.update()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                run = False
+                running = False
             if event.type == pygame.KEYDOWN:
                 main()
 
