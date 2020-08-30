@@ -14,20 +14,20 @@ pygame.display.set_caption('Space Invaders')
 BACKGROUND = pygame.transform.scale(pygame.image.load(os.path.join('assets', 'background-black.png')), (WIDTH, HEIGHT))
 
 # Lasers
-BLUE_LASER = pygame.image.load(os.path.join('assets', 'pixel_laser_blue.png'))
-GREEN_LASER = pygame.image.load(os.path.join('assets', 'pixel_laser_green.png'))
-RED_LASER = pygame.image.load(os.path.join('assets', 'pixel_laser_red.png'))
-YELLOW_LASER = pygame.image.load(os.path.join('assets', 'pixel_laser_yellow.png'))
+BLUE_LASER = pygame.image.load(os.path.join('assets', 'pixel_laser_blue.png')).convert_alpha()
+GREEN_LASER = pygame.image.load(os.path.join('assets', 'pixel_laser_green.png')).convert_alpha()
+RED_LASER = pygame.image.load(os.path.join('assets', 'pixel_laser_red.png')).convert_alpha()
+YELLOW_LASER = pygame.image.load(os.path.join('assets', 'pixel_laser_yellow.png')).convert_alpha()
 
 # Spaceships
-BLUE_SPACESHIP = pygame.image.load(os.path.join('assets', 'pixel_ship_blue_small.png'))
-GREEN_SPACESHIP = pygame.image.load(os.path.join('assets', 'pixel_ship_green_small.png'))
-RED_SPACESHIP = pygame.image.load(os.path.join('assets', 'pixel_ship_green_small.png'))
+BLUE_SPACESHIP = pygame.image.load(os.path.join('assets', 'pixel_ship_blue_small.png')).convert_alpha()
+GREEN_SPACESHIP = pygame.image.load(os.path.join('assets', 'pixel_ship_green_small.png')).convert_alpha()
+RED_SPACESHIP = pygame.image.load(os.path.join('assets', 'pixel_ship_green_small.png')).convert_alpha()
 # Player ship
-YELLOW_SPACESHIP = pygame.image.load(os.path.join('assets', 'pixel_ship_yellow.png'))
+YELLOW_SPACESHIP = pygame.image.load(os.path.join('assets', 'pixel_ship_yellow.png')).convert_alpha()
 
 # Hazards
-FREEZE_HAZARD = pygame.image.load(os.path.join('assets', 'snowflake.png'))
+FREEZE_HAZARD = pygame.image.load(os.path.join('assets', 'snowflake.png')).convert_alpha()
 
 
 class Ship:
@@ -262,7 +262,6 @@ class Hazards:
     #     return self.y > height or self.y < 0
 
 
-
 def collide(object1, object2):
     offset_x = object2.x - object1.x
     offset_y = object2.y - object1.y
@@ -306,10 +305,12 @@ def main(player_velocity=None):
     game_over_count = 0
 
     # Create hazards hash table
-    hazards = {}
     frozen = False
     freeze = Hazards(300, 10, 'freeze')
+    hazards = [freeze]
     hazard_velocity = 2
+    hazard_effect = 4   # Determines many seconds player is affected by hazard
+    hazard_counter = 0
 
     def redisplay_window():
         """
@@ -325,7 +326,8 @@ def main(player_velocity=None):
         SCREEN.blit(level_text, (WIDTH - level_text.get_width() - 10, 10))
 
         # Draw hazards to screen
-        freeze.draw(SCREEN)
+        for hazard in hazards:
+            hazard.draw(SCREEN)
 
         # Draw enemies to screen
         for enemy in enemies:
@@ -381,19 +383,27 @@ def main(player_velocity=None):
         # Allow player to move any direction as long as ship does not go off screen
         if keys[pygame.K_LEFT] and (player.x - player_velocity > 0):
             player.x -= player_velocity
-
-            # ship.x += 5  use so ship can't move left
+        # Check for frozen hazard and disallow movement if this hazard has been enabled
+            if frozen:
+                player.x += player_velocity
         if keys[pygame.K_RIGHT] and (player.x + player_velocity < WIDTH - player.get_width()):
             player.x += player_velocity
+            if frozen:
+                player.x -= player_velocity
         if keys[pygame.K_UP] and (player.y - player_velocity > 0):
             player.y -= player_velocity
+            if frozen:
+                player.y += player_velocity
         if keys[pygame.K_DOWN] and (player.y + player_velocity < HEIGHT - player.get_height() - 20):
             player.y += player_velocity
+            if frozen:
+                player.y -= player_velocity
         # Shoot Laser
         if keys[pygame.K_SPACE]:
             player.shoot()
         player.move_lasers(-laser_velocity, enemies)
 
+        # Create, move, and destroy enemies
         for enemy in enemies[:]:
             enemy.move_enemy(enemy_velocity)
             enemy.move_lasers(laser_velocity, player)
@@ -409,7 +419,13 @@ def main(player_velocity=None):
                 lives -= 1
                 enemies.remove(enemy)
 
-        freeze.move(hazard_velocity)
+        # Create, move, and enact hazards
+        for hazard in hazards:
+            hazard.move(hazard_velocity)
+            if collide(player, hazard):
+                if hazard == freeze:
+                    frozen = True
+                    hazards.remove(hazard)
 
 
 def main_menu():
