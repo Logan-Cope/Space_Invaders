@@ -292,8 +292,7 @@ def main(player_velocity=None):
         # Display Game Over text
         if game_over:
             game_over_text = game_over_font.render('GAME OVER', 1, (255, 255, 255))
-            SCREEN.blit(game_over_text,
-                        (WIDTH / 2 - game_over_text.get_width() / 2, HEIGHT / 2 - game_over_text.get_height() / 2))
+            SCREEN.blit(game_over_text, (WIDTH / 2 - game_over_text.get_width() / 2, HEIGHT / 2 - game_over_text.get_height() / 2))
 
         pygame.display.update()
 
@@ -365,8 +364,19 @@ def main(player_velocity=None):
 
 def main_menu():
     """
-    Shows main menu
-    :return:
+    Shows main menu upon starting game and after losing
     """
+    menu_font = pygame.font.SysFont('comicsans', 60)
+    run = True
+    while run:
+        SCREEN.blit(BACKGROUND, (0,0))
+        menu_text = menu_font.render("Press Any Key to Begin", 1, (255, 255, 255))
+        SCREEN.blit(menu_text, (WIDTH / 2 - menu_text.get_width() / 2, HEIGHT / 2 - menu_text.get_height() / 2))
+        pygame.display.update()
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                run = False
+            if event.type == pygame.KEYDOWN:
+                main()
 
-main()
+main_menu()
