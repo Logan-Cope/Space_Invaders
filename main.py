@@ -369,13 +369,19 @@ def main(player_velocity=None):
         # Draw to screen
         redisplay_window()
 
+        # Reset health if player loses life
+        if player.health < 0 and not game_over:
+            lives -= 1
+            if lives > 0:
+                player.health = 100
         # Check if player has lost the game
-        if lives <= 0 or player.health <= 0:
+        if lives <= 0:
             game_over = True
             game_over_count += 1
 
         # If player has lost, pause screen with game over message before going back to menu
         if game_over:
+            player.health = -1
             if game_over_count > FPS * 3:
                 running = False
             else:
@@ -411,12 +417,12 @@ def main(player_velocity=None):
         # Determine which keys are being pressed
         keys = pygame.key.get_pressed()
         # Allow player to move any direction as long as ship does not go off screen
-        if keys[pygame.K_LEFT] and (player.x - player_velocity > 0 - (player.get_width()/2)-4):
+        if keys[pygame.K_LEFT] and (player.x - player_velocity > 0 - (player.get_width() / 2) - 4):
             player.x -= player_velocity
             # Check for frozen hazard and disallow movement if this hazard has been enabled
             if hazard_effects['frozen']:
                 player.x += player_velocity
-        if keys[pygame.K_RIGHT] and (player.x + player_velocity < WIDTH - (player.get_width()/2)):
+        if keys[pygame.K_RIGHT] and (player.x + player_velocity < WIDTH - (player.get_width() / 2)):
             player.x += player_velocity
             if hazard_effects['frozen']:
                 player.x -= player_velocity
@@ -454,6 +460,7 @@ def main(player_velocity=None):
             # Check if enemy is off screen only if it hasn't collided with player
             elif enemy.y + enemy.get_height() >= HEIGHT:
                 lives -= 1
+                player.health = 100
                 enemies.remove(enemy)
 
         # Create, move, and enact hazards
