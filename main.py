@@ -261,7 +261,7 @@ class Hazards:
     def get_hazard_counter(self):
         return self.hazard_counter
 
-    def get_hazard_type:
+    def get_hazard_type(self):
         return self.type
 
     # def is_off_screen(self, height):
@@ -315,13 +315,16 @@ def main(player_velocity=None):
     game_over = False
     game_over_count = 0
 
-    # Create array for hazards, hash table for hazard effects, and hazard speed
+    # Create array for hazards, hash table for hazard effects, initialize hazard speed, and hazards per level
     # frozen = False
-    freeze = Hazards(300, 10, 'freeze')
-    hazards = [freeze]
-    hazard_effects = {'frozen': False}
+    #freeze = Hazards(300, 10, 'freeze')
+    hazards = []
+    hazard_effects = {'frozen': False, 'bullet_storm': False}
     hazard_velocity = 2
+    hazards_per_level = 2
 
+    # Initialize new level to True
+    new_level = True
 
     def redisplay_window():
         """
@@ -338,7 +341,7 @@ def main(player_velocity=None):
 
         # Draw hazards to screen
         for hazard in hazards:
-            if hazard == freeze:
+            if hazard.get_hazard_type() == 'freeze':
                 if not hazard_effects['frozen']:
                     hazard.draw(SCREEN)
 
@@ -361,7 +364,6 @@ def main(player_velocity=None):
         # Set frames per second
         clock.tick(FPS)
 
-
         # Draw to screen
         redisplay_window()
 
@@ -379,14 +381,25 @@ def main(player_velocity=None):
 
         # If we have destroyed every enemy in level, go to next level
         if len(enemies) == 0:
+            new_level = True
             level += 1
             wave_amount += 5
+            # Spawn random color enemies
             for i in range(wave_amount):
-                # Spawn random color enemies
                 i = Enemy(random.randrange(25, WIDTH - 50), random.randrange(-1500, -100),
                           random.choice(['red', 'blue', 'green']))
                 i.draw(SCREEN)
                 enemies.append(i)
+
+        # Initialize hazards
+        if new_level:
+            for i in range(hazards_per_level):
+                i = Hazards(random.randrange(25, WIDTH - 50), random.randrange(-100, -1),
+                            random.choice(['freeze']))
+                i.draw(SCREEN)
+                hazards.append(i)
+
+        new_level = False
 
         # Check for game events
         for event in pygame.event.get():
@@ -422,7 +435,9 @@ def main(player_velocity=None):
             enemy.move_enemy(enemy_velocity)
             enemy.move_lasers(laser_velocity, player)
             # Have enemy shoot ~once every 3 seconds
-            if random.randrange(0, 3 * FPS) == 1:
+            # if random.randrange(0, 3 * FPS) == 1:
+            #     enemy.shoot()
+            if random.randrange(0, 3) == 1:
                 enemy.shoot()
             # Collision between player and enemy
             if collide(player, enemy):
@@ -437,7 +452,7 @@ def main(player_velocity=None):
         for hazard in hazards:
             hazard.move(hazard_velocity)
             if collide(player, hazard):
-                if hazard == freeze:
+                if hazard.get_hazard_type() == 'freeze':
                     hazard_effects['frozen'] = True
 
         # Make sure hazards are only in affect for a specified amount of time
