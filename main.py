@@ -411,12 +411,12 @@ def main(player_velocity=None):
         # Determine which keys are being pressed
         keys = pygame.key.get_pressed()
         # Allow player to move any direction as long as ship does not go off screen
-        if keys[pygame.K_LEFT] and (player.x - player_velocity > 0):
+        if keys[pygame.K_LEFT] and (player.x - player_velocity > 0 - (player.get_width()/2)-4):
             player.x -= player_velocity
             # Check for frozen hazard and disallow movement if this hazard has been enabled
             if hazard_effects['frozen']:
                 player.x += player_velocity
-        if keys[pygame.K_RIGHT] and (player.x + player_velocity < WIDTH - player.get_width()):
+        if keys[pygame.K_RIGHT] and (player.x + player_velocity < WIDTH - (player.get_width()/2)):
             player.x += player_velocity
             if hazard_effects['frozen']:
                 player.x -= player_velocity
