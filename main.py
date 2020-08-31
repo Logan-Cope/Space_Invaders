@@ -240,8 +240,10 @@ class Hazards:
     def __init__(self, x, y, type):
         self.x = x
         self.y = y
+        self.type = type
         self.image = FREEZE_HAZARD
         self.mask = pygame.mask.from_surface(self.image)
+        self.hazard_counter = 0
 
     def draw(self, screen):
         screen.blit(self.image, (self.x, self.y))
@@ -252,6 +254,15 @@ class Hazards:
         :param velocity: float representing speed of hazard
         """
         self.y += velocity
+
+    def update_hazard_counter(self):
+        self.hazard_counter += 1
+
+    def get_hazard_counter(self):
+        return self.hazard_counter
+
+    def get_hazard_type:
+        return self.type
 
     # def is_off_screen(self, height):
     #     """
@@ -304,13 +315,13 @@ def main(player_velocity=None):
     game_over = False
     game_over_count = 0
 
-    # Create hazards hash table
-    frozen = False
+    # Create array for hazards, hash table for hazard effects, and hazard speed
+    # frozen = False
     freeze = Hazards(300, 10, 'freeze')
     hazards = [freeze]
+    hazard_effects = {'frozen': False}
     hazard_velocity = 2
-    hazard_effect = 4   # Determines many seconds player is affected by hazard
-    hazard_counter = 0
+
 
     def redisplay_window():
         """
@@ -327,7 +338,9 @@ def main(player_velocity=None):
 
         # Draw hazards to screen
         for hazard in hazards:
-            hazard.draw(SCREEN)
+            if hazard == freeze:
+                if not hazard_effects['frozen']:
+                    hazard.draw(SCREEN)
 
         # Draw enemies to screen
         for enemy in enemies:
@@ -347,6 +360,7 @@ def main(player_velocity=None):
     while running:
         # Set frames per second
         clock.tick(FPS)
+
 
         # Draw to screen
         redisplay_window()
@@ -369,7 +383,7 @@ def main(player_velocity=None):
             wave_amount += 5
             for i in range(wave_amount):
                 # Spawn random color enemies
-                i = Enemy(random.randrange(25, WIDTH - 40), random.randrange(-1500, -100),
+                i = Enemy(random.randrange(25, WIDTH - 50), random.randrange(-1500, -100),
                           random.choice(['red', 'blue', 'green']))
                 i.draw(SCREEN)
                 enemies.append(i)
@@ -383,20 +397,20 @@ def main(player_velocity=None):
         # Allow player to move any direction as long as ship does not go off screen
         if keys[pygame.K_LEFT] and (player.x - player_velocity > 0):
             player.x -= player_velocity
-        # Check for frozen hazard and disallow movement if this hazard has been enabled
-            if frozen:
+            # Check for frozen hazard and disallow movement if this hazard has been enabled
+            if hazard_effects['frozen']:
                 player.x += player_velocity
         if keys[pygame.K_RIGHT] and (player.x + player_velocity < WIDTH - player.get_width()):
             player.x += player_velocity
-            if frozen:
+            if hazard_effects['frozen']:
                 player.x -= player_velocity
         if keys[pygame.K_UP] and (player.y - player_velocity > 0):
             player.y -= player_velocity
-            if frozen:
+            if hazard_effects['frozen']:
                 player.y += player_velocity
         if keys[pygame.K_DOWN] and (player.y + player_velocity < HEIGHT - player.get_height() - 20):
             player.y += player_velocity
-            if frozen:
+            if hazard_effects['frozen']:
                 player.y -= player_velocity
         # Shoot Laser
         if keys[pygame.K_SPACE]:
@@ -424,8 +438,15 @@ def main(player_velocity=None):
             hazard.move(hazard_velocity)
             if collide(player, hazard):
                 if hazard == freeze:
-                    frozen = True
-                    hazards.remove(hazard)
+                    hazard_effects['frozen'] = True
+
+        # Make sure hazards are only in affect for a specified amount of time
+        for hazard in hazards:
+            if hazard_effects['frozen'] == True:
+                hazard.update_hazard_counter()
+            if hazard.get_hazard_counter() >= 3 * FPS:
+                hazard_effects['frozen'] = False
+                hazards.remove(hazard)
 
 
 def main_menu():
