@@ -474,7 +474,7 @@ def main(player_velocity=None):
         if new_level:
             type_counter = 0
             for i in range(len(upgrade_types)):
-                i = Upgrades(random.randrange(25, WIDTH - 50), random.randrange(-1000, -100), upgrade_types[type_counter])
+                i = Upgrades(random.randrange(25, WIDTH - 50), random.randrange(-1800, -900), upgrade_types[type_counter])
                 i.draw(SCREEN)
                 upgrades.append(i)
                 type_counter += 1
@@ -594,10 +594,10 @@ def main(player_velocity=None):
                     hazard_effects['bullet_storm_activated'] = False
                     hazards.remove(hazard)
 
-        # remove hazard if it has gone off screen
-        for hazard in hazards:
-            if hazard.is_off_screen(HEIGHT):
-                hazards.remove(hazard)
+        # # remove hazard if it has gone off screen
+        # for hazard in hazards:
+        #     if hazard.is_off_screen(HEIGHT):
+        #         hazards.remove(hazard)
 
 
 def main_menu():
