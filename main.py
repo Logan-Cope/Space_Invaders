@@ -240,6 +240,7 @@ class Upgrades:
     """
      Class for upgrades that can occur in game
     """
+
     def __init__(self, x, y, type):
         hazard_image = {'health': HEALTH, 'flame_thrower': FLAME_THROWER}
         self.x = x
@@ -389,6 +390,15 @@ def main(player_velocity=None):
         SCREEN.blit(lives_text, (10, 10))
         SCREEN.blit(level_text, (WIDTH - level_text.get_width() - 10, 10))
 
+        # Draw upgrades to screen
+        for upgrade in upgrades:
+            if upgrade.get_upgrade_type() == 'health':
+                if not upgrade_effects['health']:
+                    upgrade.draw(SCREEN)
+            if upgrade.get_upgrade_type() == 'flame_thrower':
+                if not upgrade_effects['flame_thrower']:
+                    upgrade.draw(SCREEN)
+
         # Draw hazards to screen
         for hazard in hazards:
             if hazard.get_hazard_type() == 'freeze':
@@ -450,15 +460,22 @@ def main(player_velocity=None):
                 i.draw(SCREEN)
                 enemies.append(i)
 
-        # Initialize hazards
+        # Initialize upgrades
         if new_level:
+            type_counter = 0
+            for i in range(len(upgrade_types)):
+                i = Upgrades(random.randrange(25, WIDTH - 50), random.randrange(-10, -1), upgrade_types[type_counter])
+                i.draw(SCREEN)
+                upgrades.append(i)
+                type_counter += 1
+
+            # Initialize hazards
             type_counter = 0
             for i in range(len(hazard_types)):
                 i = Hazards(random.randrange(25, WIDTH - 50), random.randrange(-1000, -100), hazard_types[type_counter])
                 i.draw(SCREEN)
                 hazards.append(i)
                 type_counter += 1
-
         new_level = False
 
         # Check for game events
@@ -514,9 +531,33 @@ def main(player_velocity=None):
                 player.health = 100
                 enemies.remove(enemy)
 
+
+        # Create, move, and enact upgrades
+        for upgrade in upgrades:
+            upgrade.move(upgrade_velocity)
+            if collide(player, upgrade):
+                # if player hits heart, increase health by 50 (up to 100)
+                if upgrade.get_upgrade_type() == 'health':
+                    if player.health < 50:
+                        player.health += 50
+                    else:
+                        player.health = 100
+                    upgrades.remove(upgrade)
+                if upgrade.get_upgrade_type() == 'flame_thrower':
+                    upgrade_effects['flame_thrower'] = True
+
+        # Make sure relevant upgrades are only in affect for specified amount of time
+        for upgrade in upgrades:
+            if upgrade.get_upgrade_type() == 'flame_thrower':
+                if upgrade_effects['flame_thrower'] == True:
+                    upgrade.update_upgrade_counter()
+                # Allow player to use flamethrower for 5 seconds
+                if upgrade.get_upgrade_counter() >= 3 * FPS:
+                    upgrade_effects['flame_thrower'] = False
+                    upgrades.remove(upgrade)
+
         # Create, move, and enact hazards
         for hazard in hazards:
-            # print(hazard_effects['bullet_storm_activated'])
             hazard.move(hazard_velocity)
             if collide(player, hazard):
                 if hazard.get_hazard_type() == 'freeze':
@@ -524,7 +565,7 @@ def main(player_velocity=None):
                 if hazard.get_hazard_type() == 'bullet_storm':
                     hazard_effects['bullet_storm_activated'] = True
 
-        # Make sure hazards are only in affect for a specified amount of time
+        # Make sure relevant hazards are only in affect for a specified amount of time
         for hazard in hazards:
             if hazard.get_hazard_type() == 'freeze':
                 if hazard_effects['frozen'] == True:
