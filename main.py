@@ -28,6 +28,7 @@ YELLOW_SPACESHIP = pygame.image.load(os.path.join('assets', 'pixel_ship_yellow.p
 
 # Hazards
 FREEZE_HAZARD = pygame.image.load(os.path.join('assets', 'snowflake.png')).convert_alpha()
+BULLET_STORM = pygame.image.load(os.path.join('assets', 'bullet_storm.png')).convert_alpha()
 
 
 class Ship:
@@ -238,10 +239,11 @@ class Hazards:
     """
 
     def __init__(self, x, y, type):
+        hazard_image = {'freeze': FREEZE_HAZARD, 'bullet_storm': BULLET_STORM}
         self.x = x
         self.y = y
         self.type = type
-        self.image = FREEZE_HAZARD
+        self.image = hazard_image[type]
         self.mask = pygame.mask.from_surface(self.image)
         self.hazard_counter = 0
 
@@ -315,13 +317,11 @@ def main(player_velocity=None):
     game_over = False
     game_over_count = 0
 
-    # Create array for hazards, hash table for hazard effects, initialize hazard speed, and hazards per level
-    # frozen = False
-    #freeze = Hazards(300, 10, 'freeze')
+    # Create array for hazards, hash table for hazard effects, initialize hazard speed, and hazards types
     hazards = []
-    hazard_effects = {'frozen': False, 'bullet_storm': False}
+    hazard_types = ['freeze', 'bullet_storm']
+    hazard_effects = {'frozen': False, 'bullet_storm_activated': False}
     hazard_velocity = 2
-    hazards_per_level = 2
 
     # Initialize new level to True
     new_level = True
@@ -343,6 +343,9 @@ def main(player_velocity=None):
         for hazard in hazards:
             if hazard.get_hazard_type() == 'freeze':
                 if not hazard_effects['frozen']:
+                    hazard.draw(SCREEN)
+            if hazard.get_hazard_type() == 'bullet_storm':
+                if not hazard_effects['bullet_storm_activated']:
                     hazard.draw(SCREEN)
 
         # Draw enemies to screen
@@ -393,11 +396,12 @@ def main(player_velocity=None):
 
         # Initialize hazards
         if new_level:
-            for i in range(hazards_per_level):
-                i = Hazards(random.randrange(25, WIDTH - 50), random.randrange(-100, -1),
-                            random.choice(['freeze']))
+            type_counter = 0
+            for i in range(len(hazard_types)):
+                i = Hazards(random.randrange(25, WIDTH - 50), random.randrange(-500, -1), hazard_types[type_counter])
                 i.draw(SCREEN)
                 hazards.append(i)
+                type_counter += 1
 
         new_level = False
 
@@ -434,11 +438,16 @@ def main(player_velocity=None):
         for enemy in enemies[:]:
             enemy.move_enemy(enemy_velocity)
             enemy.move_lasers(laser_velocity, player)
-            # Have enemy shoot ~once every 3 seconds
-            # if random.randrange(0, 3 * FPS) == 1:
-            #     enemy.shoot()
-            if random.randrange(0, 3) == 1:
-                enemy.shoot()
+            # If bullet_storm hazard is activated, have enemies shoot extremely fast
+            if hazard_effects['bullet_storm_activated']:
+                if random.randrange(0, 3) == 1:
+                    enemy.shoot()
+            # If bullet_storm is not activated, have enemies shoot ~once every 3 seconds
+            #if not hazard_effects['bullet_storm_activated']:
+            else:
+                if random.randrange(0, 3 * FPS) == 1:
+                    enemy.shoot()
+
             # Collision between player and enemy
             if collide(player, enemy):
                 player.health -= 10
@@ -450,10 +459,13 @@ def main(player_velocity=None):
 
         # Create, move, and enact hazards
         for hazard in hazards:
+           # print(hazard_effects['bullet_storm_activated'])
             hazard.move(hazard_velocity)
             if collide(player, hazard):
                 if hazard.get_hazard_type() == 'freeze':
                     hazard_effects['frozen'] = True
+                if hazard.get_hazard_type() == 'bullet_storm':
+                    hazard_effects['bullet_storm_activated'] = True
 
         # Make sure hazards are only in affect for a specified amount of time
         for hazard in hazards:
@@ -461,6 +473,12 @@ def main(player_velocity=None):
                 hazard.update_hazard_counter()
             if hazard.get_hazard_counter() >= 3 * FPS:
                 hazard_effects['frozen'] = False
+                hazards.remove(hazard)
+                continue
+            if hazard_effects['bullet_storm_activated'] == True:
+                hazard.update_hazard_counter()
+            if hazard.get_hazard_counter() >= 3 * FPS:
+                hazard_effects['bullet_storm_activated'] = False
                 hazards.remove(hazard)
 
 
