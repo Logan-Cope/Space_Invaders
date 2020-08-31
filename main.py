@@ -398,7 +398,7 @@ def main(player_velocity=None):
         if new_level:
             type_counter = 0
             for i in range(len(hazard_types)):
-                i = Hazards(random.randrange(25, WIDTH - 50), random.randrange(-500, -1), hazard_types[type_counter])
+                i = Hazards(random.randrange(25, WIDTH - 50), random.randrange(-1000, -100), hazard_types[type_counter])
                 i.draw(SCREEN)
                 hazards.append(i)
                 type_counter += 1
@@ -443,7 +443,7 @@ def main(player_velocity=None):
                 if random.randrange(0, 3) == 1:
                     enemy.shoot()
             # If bullet_storm is not activated, have enemies shoot ~once every 3 seconds
-            #if not hazard_effects['bullet_storm_activated']:
+            # if not hazard_effects['bullet_storm_activated']:
             else:
                 if random.randrange(0, 3 * FPS) == 1:
                     enemy.shoot()
@@ -459,7 +459,7 @@ def main(player_velocity=None):
 
         # Create, move, and enact hazards
         for hazard in hazards:
-           # print(hazard_effects['bullet_storm_activated'])
+            # print(hazard_effects['bullet_storm_activated'])
             hazard.move(hazard_velocity)
             if collide(player, hazard):
                 if hazard.get_hazard_type() == 'freeze':
@@ -469,17 +469,20 @@ def main(player_velocity=None):
 
         # Make sure hazards are only in affect for a specified amount of time
         for hazard in hazards:
-            if hazard_effects['frozen'] == True:
-                hazard.update_hazard_counter()
-            if hazard.get_hazard_counter() >= 3 * FPS:
-                hazard_effects['frozen'] = False
-                hazards.remove(hazard)
-                continue
-            if hazard_effects['bullet_storm_activated'] == True:
-                hazard.update_hazard_counter()
-            if hazard.get_hazard_counter() >= 3 * FPS:
-                hazard_effects['bullet_storm_activated'] = False
-                hazards.remove(hazard)
+            if hazard.get_hazard_type() == 'freeze':
+                if hazard_effects['frozen'] == True:
+                    hazard.update_hazard_counter()
+                # Freeze player for 3 seconds
+                if hazard.get_hazard_counter() >= 3 * FPS:
+                    hazard_effects['frozen'] = False
+                    hazards.remove(hazard)
+            elif hazard.get_hazard_type() == 'bullet_storm':
+                if hazard_effects['bullet_storm_activated'] == True:
+                    hazard.update_hazard_counter()
+                # Bring bullet storm from enemies for 4 seconds
+                if hazard.get_hazard_counter() >= 4 * FPS:
+                    hazard_effects['bullet_storm_activated'] = False
+                    hazards.remove(hazard)
 
 
 def main_menu():
