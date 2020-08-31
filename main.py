@@ -26,6 +26,10 @@ RED_SPACESHIP = pygame.image.load(os.path.join('assets', 'pixel_ship_green_small
 # Player ship
 YELLOW_SPACESHIP = pygame.image.load(os.path.join('assets', 'pixel_ship_yellow.png')).convert_alpha()
 
+# Upgrades
+HEALTH = pygame.image.load(os.path.join('assets', 'health.png')).convert_alpha()
+FLAME_THROWER = pygame.image.load(os.path.join('assets', 'flame_thrower.png')).convert_alpha()
+
 # Hazards
 FREEZE_HAZARD = pygame.image.load(os.path.join('assets', 'snowflake.png')).convert_alpha()
 BULLET_STORM = pygame.image.load(os.path.join('assets', 'bullet_storm.png')).convert_alpha()
@@ -232,6 +236,47 @@ class Laser:
         return collide(self, object)
 
 
+class Upgrades:
+    """
+     Class for upgrades that can occur in game
+    """
+    def __init__(self, x, y, type):
+        hazard_image = {'health': HEALTH, 'flame_thrower': FLAME_THROWER}
+        self.x = x
+        self.y = y
+        self.type = type
+        self.image = hazard_image[type]
+        self.mask = pygame.mask.from_surface(self.image)
+        self.upgrade_counter = 0
+
+    def draw(self, screen):
+        screen.blit(self.image, (self.x, self.y))
+
+    def move(self, velocity):
+        """
+        Allows upgrade to move downwards at given velocity
+        :param velocity: float representing speed of hazard
+        """
+        self.y += velocity
+
+    def update_upgrade_counter(self):
+        self.upgrade_counter += 1
+
+    def get_upgrade_counter(self):
+        return self.upgrade_counter
+
+    def get_upgrade_type(self):
+        return self.type
+
+    def is_off_screen(self, height):
+        """
+        Tells us if the upgrade is off the screen
+        :param height: integer representing height of screen in pixels
+        :return: boolean of True if hazard is off screen and False otherwise
+        """
+        return self.y > height
+
+
 class Hazards:
     """
     Class for hazards that can occur in game
@@ -251,7 +296,7 @@ class Hazards:
 
     def move(self, velocity):
         """
-        Allows hazard to downwards at given velocity
+        Allows hazard to move downwards at given velocity
         :param velocity: float representing speed of hazard
         """
         self.y += velocity
@@ -315,6 +360,12 @@ def main(player_velocity=None):
     # Define lost variable
     game_over = False
     game_over_count = 0
+
+    # Create array for upgrades, hash table for upgrade effects, initialize upgrade speed, and upgrade types
+    upgrades = []
+    upgrade_types = ['health', 'flame_thrower']
+    upgrade_effects = {'health': False, 'flame_thrower': False}
+    upgrade_velocity = 2
 
     # Create array for hazards, hash table for hazard effects, initialize hazard speed, and hazards types
     hazards = []
