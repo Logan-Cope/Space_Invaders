@@ -220,7 +220,6 @@ class Laser:
         :param height: integer representing height of screen in pixels
         :return: boolean of True if laser is off screen and False otherwise
         """
-        # return not (self.y <= height and self.y >= 0)
         return self.y > height or self.y < 0
 
     def collision(self, object):
@@ -266,13 +265,13 @@ class Hazards:
     def get_hazard_type(self):
         return self.type
 
-    # def is_off_screen(self, height):
-    #     """
-    #     Tells us if the hazard is off the screen
-    #     :param height: integer representing height of screen in pixels
-    #     :return: boolean of True if hazard is off screen and False otherwise
-    #     """
-    #     return self.y > height or self.y < 0
+    def is_off_screen(self, height):
+        """
+        Tells us if the hazard is off the screen
+        :param height: integer representing height of screen in pixels
+        :return: boolean of True if hazard is off screen and False otherwise
+        """
+        return self.y > height
 
 
 def collide(object1, object2):
@@ -321,7 +320,7 @@ def main(player_velocity=None):
     hazards = []
     hazard_types = ['freeze', 'bullet_storm']
     hazard_effects = {'frozen': False, 'bullet_storm_activated': False}
-    hazard_velocity = 2
+    hazard_velocity = 1
 
     # Initialize new level to True
     new_level = True
@@ -483,6 +482,11 @@ def main(player_velocity=None):
                 if hazard.get_hazard_counter() >= 4 * FPS:
                     hazard_effects['bullet_storm_activated'] = False
                     hazards.remove(hazard)
+
+        # remove hazard if it has gone off screen
+        for hazard in hazards:
+            if hazard.is_off_screen(HEIGHT):
+                hazards.remove(hazard)
 
 
 def main_menu():
