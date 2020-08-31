@@ -56,6 +56,7 @@ class Ship:
         self.laser_img = None
         self.lasers = []
         self.cool_down_count = 0
+        self.flame_thrower = False
 
     def draw(self, screen):
         """
@@ -94,8 +95,17 @@ class Ship:
         if self.cool_down_count == 0:
             laser = Laser(self.x, self.y, self.laser_img)
             self.lasers.append(laser)
-            # self.cool_down_count = 0  This will make the lasers be able to continuously shoot
-            self.cool_down_count = 1
+            # If flame thrower is equipped, allow for continuous lasers
+            if self.flame_thrower:
+                self.cool_down_count = 0
+            else:
+                self.cool_down_count = 1
+
+    def set_flame_thrower(self, boolean):
+        if boolean:
+            self.flame_thrower = True
+        else:
+            self.flame_thrower = False
 
     def move_lasers(self, velocity, object):
         """
@@ -464,7 +474,7 @@ def main(player_velocity=None):
         if new_level:
             type_counter = 0
             for i in range(len(upgrade_types)):
-                i = Upgrades(random.randrange(25, WIDTH - 50), random.randrange(-10, -1), upgrade_types[type_counter])
+                i = Upgrades(random.randrange(25, WIDTH - 50), random.randrange(-1000, -100), upgrade_types[type_counter])
                 i.draw(SCREEN)
                 upgrades.append(i)
                 type_counter += 1
@@ -531,8 +541,7 @@ def main(player_velocity=None):
                 player.health = 100
                 enemies.remove(enemy)
 
-
-        # Create, move, and enact upgrades
+        # Move and enact upgrades
         for upgrade in upgrades:
             upgrade.move(upgrade_velocity)
             if collide(player, upgrade):
@@ -543,8 +552,10 @@ def main(player_velocity=None):
                     else:
                         player.health = 100
                     upgrades.remove(upgrade)
+                # if player hits flame thrower, set flame thrower effect to True
                 if upgrade.get_upgrade_type() == 'flame_thrower':
                     upgrade_effects['flame_thrower'] = True
+                    player.set_flame_thrower(True)
 
         # Make sure relevant upgrades are only in affect for specified amount of time
         for upgrade in upgrades:
@@ -552,11 +563,12 @@ def main(player_velocity=None):
                 if upgrade_effects['flame_thrower'] == True:
                     upgrade.update_upgrade_counter()
                 # Allow player to use flamethrower for 5 seconds
-                if upgrade.get_upgrade_counter() >= 3 * FPS:
+                if upgrade.get_upgrade_counter() >= 5 * FPS:
+                    player.set_flame_thrower(False)
                     upgrade_effects['flame_thrower'] = False
                     upgrades.remove(upgrade)
 
-        # Create, move, and enact hazards
+        # Move and enact hazards
         for hazard in hazards:
             hazard.move(hazard_velocity)
             if collide(player, hazard):
