@@ -19,32 +19,35 @@ GREEN_LASER = pygame.image.load(os.path.join('assets', 'pixel_laser_green.png'))
 RED_LASER = pygame.image.load(os.path.join('assets', 'pixel_laser_red.png')).convert_alpha()
 YELLOW_LASER = pygame.image.load(os.path.join('assets', 'pixel_laser_yellow.png')).convert_alpha()
 
-# Spaceships
+# Spaceship Images
 BLUE_SPACESHIP = pygame.image.load(os.path.join('assets', 'pixel_ship_blue_small.png')).convert_alpha()
 GREEN_SPACESHIP = pygame.image.load(os.path.join('assets', 'pixel_ship_green_small.png')).convert_alpha()
 RED_SPACESHIP = pygame.image.load(os.path.join('assets', 'pixel_ship_green_small.png')).convert_alpha()
 # Player ship
 YELLOW_SPACESHIP = pygame.image.load(os.path.join('assets', 'pixel_ship_yellow.png')).convert_alpha()
 
-# Upgrades
+# Upgrade Images
 HEALTH = pygame.image.load(os.path.join('assets', 'health.png')).convert_alpha()
 FLAME_THROWER = pygame.image.load(os.path.join('assets', 'flame_thrower.png')).convert_alpha()
 
-# Hazards
+# Hazard Images
 FREEZE_HAZARD = pygame.image.load(os.path.join('assets', 'snowflake.png')).convert_alpha()
 BULLET_STORM = pygame.image.load(os.path.join('assets', 'bullet_storm.png')).convert_alpha()
 
 
 class Ship:
     """
-    Abstract class that represents a ship in the game (player or enemy)
+    Abstract class that represents a ship in the game (player or enemy) and includes a several
+    methods: draw, get_width, get_height, cool_down, shoot, move_lasers, and set_flame_thrower
     """
-    COOL_DOWN = 30  # cool down period of a half a second
+    # cool down period of a half a second
+    COOL_DOWN = 30
 
     def __init__(self, x, y, health=100):
         """
         Initializes ship with specified x & y-coordinates and health. Initializes ship image
-        to None, laser image to None, an empty list for lasers, and a cool down period to 0
+        to None, laser image to None, an empty list for lasers, a cool down period to 0, and
+        flame_thrower to False
         :param x: integer representing x-coordiante
         :param y: integer representing y-coordinate
         :param health: integer representing ship health
@@ -61,8 +64,8 @@ class Ship:
     def draw(self, screen):
         """
         Draws ships to screen, draws lasers to screen
-        :param screen:
-        :return:
+        :param screen: display screen to draw onto
+        :return: None
         """
         screen.blit(self.ship_img, (self.x, self.y))
         for laser in self.lasers:
@@ -85,6 +88,7 @@ class Ship:
     def cool_down(self):
         """
         Counts the cool down period to know when new laser can be shot
+        :return: None
         """
         if self.cool_down_count >= self.COOL_DOWN:
             self.cool_down_count = 0
@@ -92,6 +96,11 @@ class Ship:
             self.cool_down_count += 1
 
     def shoot(self):
+        """
+        Utilizes Laser class to initialize lasers of player and enemies. Also gives the
+        flame thrower upgrade its functionality
+        :return: None
+        """
         if self.cool_down_count == 0:
             laser = Laser(self.x, self.y, self.laser_img)
             self.lasers.append(laser)
@@ -102,6 +111,14 @@ class Ship:
                 self.cool_down_count = 1
 
     def set_flame_thrower(self, boolean):
+        """
+        Allows flame_thrower upgrade to be enacted by setting the flame_thrower attribute
+        if True is passed in and then to end by setting it back to False if False is
+        passed in
+        :param boolean: True or False boolean which determines whether the flame_thrower
+        upgrade should be set or not
+        :return: None
+        """
         if boolean:
             self.flame_thrower = True
         else:
@@ -109,10 +126,10 @@ class Ship:
 
     def move_lasers(self, velocity, object):
         """
-        Moves enemy lasers
-        :param velocity:
-        :param object:
-        :return:
+        Moves enemy lasers downwards a the specified velocity
+        :param velocity: Integer representing how fast laser should travel downwards
+        :param object: Used to check if enemy laser has a collision with the player's ship
+        :return: None
         """
         # Call cool down to see if new laser can be shot
         self.cool_down()
@@ -128,10 +145,18 @@ class Ship:
 
 class Player(Ship):
     """
-    Represents player ship
+    Represents player's ship which includes methods to draw, move lasers, and a health bar
     """
 
     def __init__(self, x, y, health=100):
+        """
+        Initializes ship with specified x & y-coordinates and health. Initializes ship image
+        to YELLOW_SPACESHIP, laser image to YELLOW_LASER, max health to specified parameter
+        or default of 100 if no parameter passed in, and mask for collision purposes
+        :param x: integer representing x-coordiante
+        :param y: integer representing y-coordinate
+        :param health: integer representing ship health
+        """
         super().__init__(x, y, health)
         self.ship_img = YELLOW_SPACESHIP
         self.laser_img = YELLOW_LASER
@@ -139,15 +164,20 @@ class Player(Ship):
         self.mask = pygame.mask.from_surface(self.ship_img)  # Create mask for collision
 
     def draw(self, screen):
+        """
+        Draws ships to screen, draws health bar to screen
+        :param screen: display screen to draw onto
+        :return: None
+        """
         super().draw(screen)
         self.health_bar(screen)
 
     def move_lasers(self, velocity, objects):
         """
         Move player lasers
-        :param velocity:
-        :param object:
-        :return:
+        :param velocity: integer that determines how fast lasers move across the screen
+        :param objects: objects to remove once they are hit by a laser
+        :return: None
         """
         # Call cool down to see if new laser can be shot
         self.cool_down()
@@ -166,6 +196,8 @@ class Player(Ship):
     def health_bar(self, screen):
         """
         Shows player's health bar on screen
+        :param screen: display screen to draw health bar onto
+        :return None
         """
         pygame.draw.rect(screen, (255, 0, 0),
                          (self.x, self.y + self.ship_img.get_height() + 10, self.ship_img.get_width(), 10))
@@ -177,10 +209,19 @@ class Player(Ship):
 
 class Enemy(Ship):
     """
-    Represents enemy ships
+    Represents player's ship which includes methods to move enemy and shoot
     """
 
     def __init__(self, x, y, color, health=100):
+        """
+        Initializes enemy ship with specified x & y-coordinates and health. Initializes ship image
+        based on ship color and laser image based on ship color, health to specified parameter or
+        default of 100 if no parameter passed in, and mask for collision purposes
+        :param x: integer representing x-coordiante
+        :param y: integer representing y-coordinate
+        :param color:
+        :param health: integer representing ship health
+        """
         # Create hash table to determine which color enemy ship to use
         color_table = {
             'blue': (BLUE_SPACESHIP, BLUE_LASER),
@@ -195,7 +236,7 @@ class Enemy(Ship):
         """
         Moves enemy ships downward on screen
         :param velocity: integer representing how fast to move enemy ship
-        :return:
+        :return: None
         """
         self.y += velocity
 
@@ -209,16 +250,29 @@ class Enemy(Ship):
 
 class Laser:
     """
-    Represent laser to be shot from ship (player or enemy)
+    Represent laser to be shot from ship (player or enemy) with methods of draw, move,
+    is_off_screen, and collision
     """
 
     def __init__(self, x, y, image):
+        """
+        Initializes laser with specified x & y-coordinates and initializes ship image
+        to specified image, and mask for collision purposes
+        :param x: integer representing x-coordiante
+        :param y: integer representing y-coordinate
+        :param image: laser image
+        """
         self.x = x
         self.y = y
         self.image = image
         self.mask = pygame.mask.from_surface((self.image))
 
     def draw(self, screen):
+        """
+        Draws ships to screen, draws health bar to screen
+        :param screen: display screen to draw onto
+        :return: None
+        """
         screen.blit(self.image, (self.x, self.y))
 
     def move(self, velocity):
@@ -238,10 +292,9 @@ class Laser:
 
     def collision(self, object):
         """
-        UPDATE THIS DOC STRING
-        Calls collide function
+        Use collide function
         :param object:
-        :return:
+        :return: boolean
         """
         return collide(self, object)
 
@@ -474,7 +527,8 @@ def main(player_velocity=None):
         if new_level:
             type_counter = 0
             for i in range(len(upgrade_types)):
-                i = Upgrades(random.randrange(25, WIDTH - 50), random.randrange(-1800, -900), upgrade_types[type_counter])
+                i = Upgrades(random.randrange(25, WIDTH - 50), random.randrange(-1800, -900),
+                             upgrade_types[type_counter])
                 i.draw(SCREEN)
                 upgrades.append(i)
                 type_counter += 1
