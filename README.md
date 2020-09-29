@@ -13,8 +13,8 @@ My take on the classic Space Invaders game implemented in python, utilizing Pyga
     - Bullet Storm: enemies rain down bullets for 4 seconds, making it very difficult to dodge
     
 ## Controls
+- Spacebar: move ship left
 - Left Arrow: move ship left
 - Right Arrow: move ship right
 - Up Arrow: move ship up
 - Down Arrow: move ship down
-
