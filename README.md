@@ -8,7 +8,7 @@ My take on the classic Space Invaders game implemented in python, utilizing Pyga
 - Power ups:
   - Heart: increases player's health
   - Flame Thrower: allows player to shoot a continuous laser for 5 seconds
- - Hazards
+ - Hazards:
     - Freeze: player ship cannot move for 3 seconds
     - Bullet Storm: enemies rain down bullets for 4 seconds, making it very difficult to dodge
     
